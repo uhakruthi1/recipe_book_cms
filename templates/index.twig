@@ -1,0 +1,438 @@
+{% extends "_layout.twig" %}
+
+{% import _self as ui %}
+
+{% macro difficultyInsight(label, count, total, note) %}
+    {% set percent = total ? (count / total * 100)|round(1, 'floor') : 0 %}
+    <article class="insight-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+            <p class="badge">{{ label }}</p>
+            <strong>{{ count }}</strong>
+        </div>
+        {% if note %}
+            <p>{{ note }}</p>
+        {% endif %}
+        <div class="progress-track">
+            <span class="progress-fill" style="transform: scaleX({{ percent / 100 }})"></span>
+        </div>
+        <div class="progress-meta">
+            <span>{{ percent }}%</span>
+            <span>{{ total }} total</span>
+        </div>
+    </article>
+{% endmacro %}
+
+{% block content %}
+    {% set fields = craft.app.fields %}
+    {% set featuredField = fields.getFieldByHandle('isFeatured') %}
+    {% set tagGroup = craft.app.tags.getTagGroupByHandle('recipeTags') %}
+    {% set sampleRecipes = [
+        {
+            title: 'Sunrise Veggie Omelette',
+            difficulty: 'Easy',
+            cookTime: '15',
+            mealCategory: 'breakfast',
+            description: 'Fluffy eggs loaded with peppers, spinach, and feta for busy mornings.',
+            url: '#'
+        },
+        {
+            title: 'Citrus Quinoa Power Bowl',
+            difficulty: 'Medium',
+            cookTime: '25',
+            mealCategory: 'lunch',
+            description: 'Protein-packed quinoa salad with roasted chickpeas and tangy dressing.',
+            url: '#'
+        },
+        {
+            title: 'Spiced Nuts & Seed Clusters',
+            difficulty: 'Easy',
+            cookTime: '10',
+            mealCategory: 'snack',
+            description: 'Crunchy snack bites coated in maple, cayenne, and flaky salt.',
+            url: '#'
+        },
+        {
+            title: 'Herbed Sheet-Pan Salmon',
+            difficulty: 'Medium',
+            cookTime: '30',
+            mealCategory: 'dinner',
+            description: 'One-pan salmon with potatoes, asparagus, and lemon herb butter.',
+            url: '#'
+        },
+    ] %}
+
+    {% set featuredRecipe = featuredField ? craft.entries.section('recipes').isFeatured(true).orderBy('postDate desc').one() : null %}
+    {% set latestRecipes = craft.entries.section('recipes').with(['recipeImage']).limit(6).all() %}
+    {% if latestRecipes|length < 4 %}
+        {% set latestRecipes = latestRecipes|merge(sampleRecipes|slice(0, 4 - latestRecipes|length)) %}
+    {% endif %}
+    {% set videoEntry = craft.entries.section('recipes').videoUrl(':notempty:').with(['recipeImage']).one() %}
+    {% set seasonalTag = tagGroup ? craft.tags.group('recipeTags').slug('seasonal').one() : null %}
+    {% set seasonalRecipes = seasonalTag ? craft.entries.section('recipes').relatedTo(seasonalTag).with(['recipeImage']).limit(3).all() : [] %}
+    {% set authorSpotlightSource = featuredRecipe ?: (latestRecipes|length ? latestRecipes|first : null) %}
+    {% set leadAuthor = authorSpotlightSource ? authorSpotlightSource.author : null %}
+
+    {% set quickTags = tagGroup ? craft.tags.group('recipeTags').limit(5).all() : [] %}
+
+    <section class="page-hero">
+        <p class="eyebrow">Your curated kitchen</p>
+        <h1>Plan tonight's dinner with confidence</h1>
+        <p>Discover doable meals, filter by difficulty, and save share-worthy dishes for any gathering.</p>
+        <div class="hero-actions">
+            <a class="btn-primary" href="{{ url('recipes') }}">Browse Recipes</a>
+            <a class="btn-secondary" href="{{ url('recipes') }}#filters">Filter by Difficulty</a>
+        </div>
+
+        {% if featuredRecipe %}
+            {% set summary = featuredRecipe.description|striptags %}
+            <div class="hero-featured">
+                <small>Chef's Pick</small>
+                <a href="{{ featuredRecipe.url }}">{{ featuredRecipe.title }}</a>
+                {% if summary %}
+                    {% set trimmed = summary|length > 150 ? summary|slice(0, 150) ~ '...' : summary %}
+                    <p>{{ trimmed }}</p>
+                {% endif %}
+                <div class="hero-featured-meta">
+                    {% if featuredRecipe.cookTime %}
+                        <span>Cook: {{ featuredRecipe.cookTime }} min</span>
+                    {% endif %}
+                    {% if featuredRecipe.difficulty %}
+                        <span>Difficulty: {{ featuredRecipe.difficulty }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if quickTags|length %}
+        <div class="quick-links">
+            {% for tag in quickTags %}
+                <a href="{{ url('recipes', { tag: tag.slug }) }}">#{{ tag.title }}</a>
+            {% endfor %}
+            <a href="{{ url('recipes/difficulty/easy') }}">Easy dinners</a>
+            <a href="{{ url('recipes/difficulty/hard') }}">Showstoppers</a>
+        </div>
+    {% endif %}
+
+    {% if leadAuthor %}
+        <section class="author-spotlight page-section">
+            <div class="author-meta">
+                <p class="eyebrow" style="margin-bottom:0.5rem;">Author spotlight</p>
+                <h2 style="margin:0;">{{ leadAuthor.friendlyName ?: leadAuthor.username }}</h2>
+                <p class="muted">{{ leadAuthor.bio ?? 'Share a short bio in the user profile to highlight authors on the homepage.' }}</p>
+                <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                    <a class="btn-primary" href="{{ url('recipes', { q: leadAuthor.friendlyName ?: leadAuthor.username }) }}">View their recipes</a>
+                    <a class="btn-secondary" href="{{ url('register') }}">Follow author</a>
+                </div>
+            </div>
+            <div style="text-align:center;">
+                {% if leadAuthor.photoUrl %}
+                    <img src="{{ leadAuthor.photoUrl }}" alt="{{ leadAuthor.friendlyName ?: leadAuthor.username }}">
+                {% else %}
+                    <div style="width:120px;height:120px;border-radius:50%;background:rgba(0,0,0,0.05);margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:600;">{{ (leadAuthor.friendlyName ?: leadAuthor.username)|first|upper }}</div>
+                {% endif %}
+                <p class="muted" style="margin-top:0.5rem;">{{ leadAuthor.email ?? 'Add social links in the profile.' }}</p>
+            </div>
+        </section>
+    {% endif %}
+
+    {% set totalRecipes = craft.entries.section('recipes').count() %}
+    {% set easyCount = craft.entries.section('recipes').difficulty('Easy').count() %}
+    {% set mediumCount = craft.entries.section('recipes').difficulty('Medium').count() %}
+    {% set hardCount = craft.entries.section('recipes').difficulty('Hard').count() %}
+
+    <section class="recipe-stats page-section">
+        <article class="recipe-stat-card">
+            <span>Recipes Live</span>
+            <strong>{{ totalRecipes }}</strong>
+        </article>
+        <article class="recipe-stat-card">
+            <span>Easy Weeknight</span>
+            <strong>{{ easyCount }}</strong>
+        </article>
+        <article class="recipe-stat-card">
+            <span>Weekend Projects</span>
+            <strong>{{ mediumCount + hardCount }}</strong>
+        </article>
+    </section>
+
+    {% set difficultyTotal = easyCount + mediumCount + hardCount %}
+    <section class="page-section">
+        <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+                <p class="eyebrow" style="margin-bottom:0.3rem;">Operations snapshot</p>
+                <h2>Difficulty mix at a glance</h2>
+            </div>
+            <a class="btn-secondary" href="{{ url('recipes') }}#filters">Adjust pipeline</a>
+        </header>
+        <div class="insights-grid">
+            {{ ui.difficultyInsight('Easy', easyCount, difficultyTotal, 'Weeknight staples ready under 30 minutes.') }}
+            {{ ui.difficultyInsight('Medium', mediumCount, difficultyTotal, 'Weekend recipes suited for families.') }}
+            {{ ui.difficultyInsight('Hard', hardCount, difficultyTotal, 'Showstoppers for events and launches.') }}
+        </div>
+    </section>
+
+    <section class="difficulty-showcase page-section">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; gap:1rem;">
+            <h2>Explore by difficulty</h2>
+            <a class="btn-secondary" href="{{ url('recipes') }}#filters">View filters</a>
+        </header>
+        {% set difficultyMap = {
+            'easy': { label: 'Easy wins', count: easyCount, description: 'Ready in under 30' },
+            'medium': { label: 'Weekend heroes', count: mediumCount, description: 'Worth the effort' },
+            'hard': { label: 'Showstopper', count: hardCount, description: 'Hosts will rave' }
+        } %}
+        <div class="difficulty-grid">
+            {% for key, data in difficultyMap %}
+                <a class="difficulty-card" href="{{ url('recipes/difficulty/' ~ key) }}">
+                    <strong>{{ data.count }}</strong>
+                    <span>{{ data.label }}</span>
+                    <p style="margin:0.3rem 0 0; color:var(--muted); font-size:0.85rem;">{{ data.description }}</p>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% set planSlots = [
+        { day: 'Monday', title: 'Weeknight kickoff', difficulty: 'Easy', note: 'Start with something gentle.' },
+        { day: 'Tuesday', title: 'Midweek energy', difficulty: 'Medium', note: 'Try a new flavor combo.' },
+        { day: 'Wednesday', title: 'Veggie focus', difficulty: null, note: 'Balance out the week.', query: 'veg' },
+        { day: 'Thursday', title: 'Prep ahead', difficulty: 'Easy', note: 'Cook once, eat twice.' },
+        { day: 'Friday', title: 'Date-night flex', difficulty: 'Hard', note: 'Bring the wow factor.' },
+        { day: 'Weekend', title: 'Slow project', difficulty: 'Medium', note: 'Let the kitchen fill the home.' }
+    ] %}
+    <section class="page-section">
+        <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:0.5rem;">
+            <div>
+                <p class="eyebrow" style="margin-bottom:0.3rem;">Meal plan</p>
+                <h2>Planner-ready suggestions</h2>
+            </div>
+            <a class="btn-secondary" href="{{ url('recipes') }}">Customize</a>
+        </header>
+        <div class="plan-board">
+            {% for slot in planSlots %}
+                {% set slotQuery = craft.entries.section('recipes') %}
+                {% if slot.difficulty %}
+                    {% set slotQuery = slotQuery.difficulty(slot.difficulty) %}
+                {% endif %}
+                {% if slot.query ?? null %}
+                    {% set slotQuery = slotQuery.search(slot.query) %}
+                {% endif %}
+                {% set slotEntry = slotQuery.orderBy('postDate desc').offset(loop.index0).one() %}
+                <article class="plan-card">
+                    <small>{{ slot.day }}</small>
+                    <h3>{{ slot.title }}</h3>
+                    <p>{{ slot.note }}</p>
+                    {% if slotEntry %}
+                        <a href="{{ slotEntry.url }}">{{ slotEntry.title }}</a>
+                    {% else %}
+                        <span class="muted">Add more {{ slot.difficulty ?: 'seasonal' }} recipes to fill this slot.</span>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="page-section">
+        <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+            <div>
+                <h2>Fresh from the kitchen</h2>
+                <p style="margin:0;color:var(--muted);">Latest additions curated for you.</p>
+            </div>
+            <a class="btn-secondary" href="{{ url('recipes') }}">See all</a>
+        </header>
+        <div class="recipes-grid">
+            {% for recipe in latestRecipes %}
+                {% include "recipes/_card" with { recipe: recipe } %}
+            {% else %}
+                <p>No recipes yet. Add some from the admin panel!</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="cta-banner page-section">
+        <div style="flex:1 1 260px;">
+            <p class="eyebrow" style="color:rgba(255,255,255,0.75);">Kitchen club</p>
+            <h3>Get seasonal menus + chef tips in your inbox</h3>
+            <p>One thoughtful email per week with shopping lists, prep shortcuts, and curated pairings.</p>
+        </div>
+        <form>
+            <input type="email" placeholder="Email address">
+            <button type="button">Notify me</button>
+        </form>
+    </section>
+
+    {% if seasonalTag %}
+        <section class="page-section">
+            <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                <div>
+                    <h2>Seasonal collection</h2>
+                    <p style="margin:0;color:var(--muted);">Tag recipes with “seasonal” to feature them here.</p>
+                </div>
+                <a class="btn-secondary" href="{{ url('recipes', { tag: 'seasonal' }) }}">View all</a>
+            </header>
+            {% if seasonalRecipes|length %}
+                <div class="seasonal-grid">
+                    {% for recipe in seasonalRecipes %}
+                        {% set image = recipe.recipeImage.one() %}
+                        <article class="seasonal-card">
+                            {% if image %}
+                                <img src="{{ image.url }}" alt="{{ recipe.title }}">
+                            {% endif %}
+                            <span>{{ recipe.cookTime ? recipe.cookTime ~ ' min' : 'Seasonal favorite' }}</span>
+                            <h3 style="margin:0.35rem 0 0.2rem;"><a href="{{ recipe.url }}" style="text-decoration:none; color:inherit;">{{ recipe.title }}</a></h3>
+                            <p style="margin:0; color:var(--muted); font-size:0.9rem;">{{ recipe.description|striptags|slice(0,90) ~ (recipe.description|length > 90 ? '...' : '') }}</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p style="margin-top:1rem; color:var(--muted);">No seasonal recipes yet—tag a recipe with “seasonal” to spotlight it.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if videoEntry %}
+        <section class="page-section">
+            <header style="display:flex;justify-content:space-between;gap:1rem;align-items:center;">
+                <div>
+                    <h2>Video spotlight</h2>
+                    <p style="margin:0;color:var(--muted);">Watch a quick walkthrough before you cook.</p>
+                </div>
+                <a class="btn-secondary" href="{{ videoEntry.url }}">View recipe</a>
+            </header>
+            <div class="video-card" style="margin-top:1rem; display:grid; gap:1.5rem; grid-template-columns: repeat(auto-fit,minmax(260px,1fr));">
+                <div>
+                    <div class="video-embed">
+                        <iframe src="{{ videoEntry.videoUrl }}" allowfullscreen></iframe>
+                    </div>
+                </div>
+                <div class="notes-panel">
+                    <p class="eyebrow" style="margin-bottom:0.5rem;">Chef walkthrough</p>
+                    <h3>{{ videoEntry.title }}</h3>
+                    <p>{{ videoEntry.description|striptags|slice(0, 200) ~ (videoEntry.description|length > 200 ? '...' : '') }}</p>
+                    <ul style="padding-left:1.2rem; margin:1rem 0 0; color:var(--muted);">
+                        {% if videoEntry.cookTime %}<li>Cook time: {{ videoEntry.cookTime }} min</li>{% endif %}
+                        {% if videoEntry.difficulty %}<li>Difficulty: {{ videoEntry.difficulty }}</li>{% endif %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    {% if tagGroup %}
+        {% set trendingTags = craft.tags.group('recipeTags').orderBy('title asc').limit(10).all() %}
+        {% if trendingTags|length %}
+            <section class="page-section">
+                <h2>Trending tags</h2>
+                <div class="tags-cloud">
+                    {% for tag in trendingTags %}
+                        <a href="{{ url('recipes', { q: tag.title }) }}">{{ tag.title }}</a>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endif %}
+    {% endif %}
+
+    {% set resourceCards = [
+        {
+            title: 'Contributor playbook',
+            description: 'Share this checklist with regional volunteers before they submit.',
+            items: [
+                'Download the recipe story template',
+                'Collect at least one hero photo',
+                'Double-check ingredient formatting'
+            ],
+            link: { label: 'Open template', url: url('submit') ~ '#guide' }
+        },
+        {
+            title: 'Quality checklist',
+            description: 'Run through these sign-off steps before publishing a new recipe.',
+            items: [
+                'Difficulty + cook time completed',
+                'Media passes color/lighting checks',
+                'Nutrition & highlights set'
+            ],
+            link: { label: 'View workflow', url: url('recipes') }
+        },
+        {
+            title: 'Community outreach',
+            description: 'Keep non-developers looped in with shareable links.',
+            items: [
+                'Send `/submit` portal during onboarding',
+                'Email `/register` for returning editors',
+                'Link to `/recipes#favorites` for curated boards'
+            ],
+            link: { label: 'Copy links', url: url('submit') }
+        }
+    ] %}
+    <section class="page-section">
+        <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+                <p class="eyebrow" style="margin-bottom:0.3rem;">Contributor HQ</p>
+                <h2>Resources for non-developers</h2>
+            </div>
+            <a class="btn-primary" href="{{ url('register') }}">Invite editors</a>
+        </header>
+        <div class="resource-cards">
+            {% for card in resourceCards %}
+                <article class="resource-card">
+                    <h3>{{ card.title }}</h3>
+                    <p>{{ card.description }}</p>
+                    <ul>
+                        {% for item in card.items %}
+                            <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% if card.link %}
+                        <a class="btn btn-ghost" style="margin-top:0.75rem;" href="{{ card.link.url }}">{{ card.link.label }}</a>
+                    {% endif %}
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    {% set timelineEntries = craft.entries.section('recipes').orderBy('postDate desc').limit(5).all() %}
+    {% if timelineEntries|length == 0 %}
+        {% set timelineEntries = sampleRecipes %}
+    {% endif %}
+    {% if timelineEntries|length %}
+        <section class="page-section">
+            <header style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+                <div>
+                    <p class="eyebrow" style="margin-bottom:0.3rem;">Fresh timeline</p>
+                    <h2>Recent submissions</h2>
+                </div>
+                <a class="btn-secondary" href="{{ url('submit') }}">Share yours</a>
+            </header>
+            <ol class="timeline">
+                {% for entry in timelineEntries %}
+                    <li class="timeline__item">
+                        <div class="timeline__date">{{ entry.postDate|default('now')|date('M d') }}</div>
+                        <div class="timeline__content">
+                            <h4><a href="{{ entry.url ?? '#' }}">{{ entry.title }}</a></h4>
+                            <p>{{ entry.description|default('New community submission in review.')|striptags|slice(0, 90) ~ (entry.description is defined and entry.description|length > 90 ? '...' : '') }}</p>
+                        </div>
+                        <a class="btn-ghost" href="{{ entry.url ?? '#' }}">Cook</a>
+                    </li>
+                {% endfor %}
+            </ol>
+        </section>
+    {% endif %}
+
+    <section class="auth-cta page-section" id="favorites">
+        <div>
+            <p class="eyebrow" style="margin-bottom:0.4rem;">Your cookbook</p>
+            <h2>Save favorites & follow authors</h2>
+            <p>Use the heart icons to build your favorites board. Create an account to sync preferences across devices and unlock personalized author recommendations.</p>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+            {% if craft.app.user.isGuest %}
+                <a class="btn-primary" href="{{ url('register') }}">Create account</a>
+                <a class="btn-secondary" href="{{ url('login') }}">Already have one?</a>
+            {% else %}
+                <span class="muted">You're signed in as {{ craft.app.user.identity.friendlyName ?: craft.app.user.identity.username }}.</span>
+                <a class="btn-primary" href="{{ url('account') }}">Manage account</a>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

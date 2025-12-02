@@ -1,0 +1,211 @@
+{% extends "_layout.twig" %}
+
+{% set sectionHandle = 'recipes' %}
+{% set success = craft.app.request.getParam('success') %}
+{% set submissionEntry = entry ?? null %}
+
+{% macro fieldErrors(entry, handle) %}
+    {% if entry and entry.getErrors(handle)|length %}
+        <ul style="margin:0.35rem 0 0 0.8rem;color:#c0392b;font-size:0.85rem;">
+            {% for error in entry.getErrors(handle) %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
+
+{% block content %}
+    <section class="recipe-single" style="max-width:760px;margin:0 auto;">
+        <h1>Share a recipe</h1>
+        <p class="muted">Submit your creation without needing a Craft control panel account. We’ll review, polish, and publish it for the community.</p>
+
+        <div class="submission-guide" id="guide">
+            <p style="margin:0;font-weight:600;">How it works</p>
+            <div class="submission-guide__steps">
+                <div class="submission-guide__step">
+                    <p style="margin:0;font-weight:600;">1. Share details</p>
+                    <p class="muted" style="margin:0.25rem 0 0;">Fill out the form below with story, ingredients, and media.</p>
+                </div>
+                <div class="submission-guide__step">
+                    <p style="margin:0;font-weight:600;">2. Editorial pass</p>
+                    <p class="muted" style="margin:0.25rem 0 0;">Our editors fact-check, format, and give it a final taste test.</p>
+                </div>
+                <div class="submission-guide__step">
+                    <p style="margin:0;font-weight:600;">3. Publish + notify</p>
+                    <p class="muted" style="margin:0.25rem 0 0;">We email you a link once it’s live for sharing with friends.</p>
+                </div>
+            </div>
+        </div>
+
+        {% if success %}
+            <div style="margin:1.5rem 0;padding:1rem 1.25rem;background:rgba(82,224,139,0.12);border:1px solid rgba(82,224,139,0.4);border-radius:16px;">
+                <strong>Thanks!</strong> Your recipe was received. Our team will review it shortly.
+            </div>
+        {% endif %}
+
+            {% if submissionEntry and submissionEntry.hasErrors() %}
+                <div style="margin:1rem 0;padding:1rem 1.25rem;background:rgba(255,113,150,0.12);border:1px solid rgba(255,113,150,0.4);border-radius:16px;">
+                    <strong>We couldn’t save the recipe.</strong> Please fix the highlighted fields and try again.
+                </div>
+            {% endif %}
+
+        <form method="post" enctype="multipart/form-data" accept-charset="UTF-8" style="display:grid;gap:1.5rem;">
+            {{ csrfInput() }}
+            {{ actionInput('guest-entries/save') }}
+            {{ redirectInput('submit?success=1') }}
+            {{ hiddenInput('sectionHandle', sectionHandle) }}
+            {{ hiddenInput('siteId', craft.app.sites.currentSite.id) }}
+            {{ hiddenInput('fieldsLocation', 'fields') }}
+            {{ hiddenInput('enabled', 0) }}
+
+            <label>
+                <span>Recipe title *</span>
+                <input type="text" name="title" value="{{ submissionEntry.title ?? '' }}" required style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                {{ _self.fieldErrors(submissionEntry, 'title') }}
+            </label>
+
+            <label>
+                <span>Short description *</span>
+                <textarea name="fields[description]" rows="3" required style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">{{ submissionEntry is not null ? submissionEntry.description : '' }}</textarea>
+                {{ _self.fieldErrors(submissionEntry, 'description') }}
+            </label>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+                <label>
+                    <span>Difficulty *</span>
+                    {% set difficultyValue = submissionEntry is not null ? submissionEntry.difficulty : null %}
+                    <select name="fields[difficulty]" required style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                        <option value="">Select…</option>
+                        {% for option in ['Easy','Medium','Hard'] %}
+                            <option value="{{ option }}" {{ difficultyValue == option ? 'selected' }}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                    {{ _self.fieldErrors(submissionEntry, 'difficulty') }}
+                </label>
+                <label>
+                    <span>Cook time (minutes) *</span>
+                    <input type="number" min="1" name="fields[cookTime]" value="{{ submissionEntry is not null ? submissionEntry.cookTime : '' }}" required style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                    {{ _self.fieldErrors(submissionEntry, 'cookTime') }}
+                </label>
+                <div>
+                    <span>Meal Categories *</span>
+                    {% set mealValue = submissionEntry is not null ? submissionEntry.mealCategory : [] %}
+                    {% if mealValue is iterable == false %}
+                        {% set mealValue = mealValue ? [mealValue] : [] %}
+                    {% endif %}
+                    <div style="display:flex;flex-wrap:wrap;gap:0.6rem;margin-top:0.3rem;">
+                        {% for key,label in {'breakfast':'Breakfast','lunch':'Lunch','snack':'Snack','dinner':'Dinner'} %}
+                            <label style="display:flex;align-items:center;gap:0.3rem;">
+                                <input type="checkbox" name="fields[mealCategory][]" value="{{ key }}" {{ key in mealValue ? 'checked' }}>
+                                <span>{{ label }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    {{ _self.fieldErrors(submissionEntry, 'mealCategory') }}
+                </div>
+                <label>
+                    <span>Prep time (minutes)</span>
+                    <input type="number" min="0" name="fields[prepTime]" value="{{ submissionEntry is not null ? submissionEntry.prepTime : '' }}" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                </label>
+                <label>
+                    <span>Servings</span>
+                    <input type="text" name="fields[servings]" value="{{ submissionEntry is not null ? submissionEntry.servings : '' }}" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                </label>
+                <label>
+                    <span>Calories</span>
+                    <input type="text" name="fields[calories]" value="{{ submissionEntry is not null ? submissionEntry.calories : '' }}" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                </label>
+            </div>
+
+            <label>
+                <span>Ingredients *</span>
+                <textarea name="fields[ingredients]" rows="6" required style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);" placeholder="One ingredient per line">{{ submissionEntry is not null ? submissionEntry.ingredients : '' }}</textarea>
+                {{ _self.fieldErrors(submissionEntry, 'ingredients') }}
+            </label>
+
+            <label>
+                <span>Steps *</span>
+                <textarea name="fields[steps]" rows="8" required style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);" placeholder="Write each step on a new line">{{ submissionEntry is not null ? submissionEntry.steps : '' }}</textarea>
+                {{ _self.fieldErrors(submissionEntry, 'steps') }}
+            </label>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+                <label>
+                    <span>Recipe story / inspiration</span>
+                    <textarea name="fields[recipeStory]" rows="4" style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">{{ submissionEntry is not null ? submissionEntry.recipeStory : '' }}</textarea>
+                </label>
+                <label>
+                    <span>Perfect occasion</span>
+                    <input type="text" name="fields[suggestedOccasion]" placeholder="e.g., Game day, Picnic" value="{{ submissionEntry is not null ? submissionEntry.suggestedOccasion : '' }}" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                </label>
+            </div>
+
+            <label>
+                <span>Chef notes</span>
+                <textarea name="fields[chefNotes]" rows="4" style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">{{ submissionEntry is not null ? submissionEntry.chefNotes : '' }}</textarea>
+            </label>
+
+            <label>
+                <span>Nutrition facts</span>
+                <textarea name="fields[nutritionFacts]" rows="4" style="width:100%;padding:0.75rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">{{ submissionEntry is not null ? submissionEntry.nutritionFacts : '' }}</textarea>
+            </label>
+
+            <label>
+                <span>Video URL</span>
+                <input type="url" name="fields[videoUrl]" value="{{ submissionEntry is not null ? submissionEntry.videoUrl : '' }}" placeholder="https://www.youtube.com/embed/..." style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+            </label>
+
+            <div>
+                <span>Highlights (pick up to 3)</span>
+                {% set highlights = submissionEntry is not null ? submissionEntry.recipeHighlights : [] %}
+                <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-top:0.5rem;">
+                    {% set highlightOptions = ['Quick win','Meal prep','Crowd pleaser','Kid friendly','High protein','Vegetarian'] %}
+                    {% for option in highlightOptions %}
+                        <label style="display:flex;align-items:center;gap:0.35rem;">
+                            <input type="checkbox" name="fields[recipeHighlights][]" value="{{ option }}" {{ highlights is defined and option in highlights ? 'checked' }}>
+                            <span>{{ option }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <label>
+                <span>Recipe image</span>
+                <input type="file" name="fields[recipeImage][]" accept="image/*">
+                <small class="muted">JPEG or PNG, max 4MB.</small>
+                {{ _self.fieldErrors(submissionEntry, 'recipeImage') }}
+            </label>
+
+            <section style="border-radius:20px;border:1px solid rgba(0,0,0,0.08);padding:1.25rem;">
+                <h2 style="margin-top:0;">Contributor details</h2>
+                <p class="muted">We only use this information to follow up about your submission.</p>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;">
+                    <label>
+                        <span>Your name *</span>
+                        <input type="text" name="fields[submitterName]" value="{{ submissionEntry is not null ? submissionEntry.submitterName : '' }}" required style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                    </label>
+                    <label>
+                        <span>Email *</span>
+                        <input type="email" name="fields[submitterEmail]" value="{{ submissionEntry is not null ? submissionEntry.submitterEmail : '' }}" required style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                    </label>
+                    <label>
+                        <span>Social / website</span>
+                        <input type="text" name="fields[submitterHandle]" value="{{ submissionEntry is not null ? submissionEntry.submitterHandle : '' }}" placeholder="@chefhandle" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">
+                    </label>
+                </div>
+                <label style="margin-top:1rem;">
+                    <span>Anything else we should know?</span>
+                    <textarea name="fields[submitterNotes]" rows="3" style="width:100%;padding:0.65rem;border-radius:14px;border:1px solid rgba(0,0,0,0.12);">{{ submissionEntry is not null ? submissionEntry.submitterNotes : '' }}</textarea>
+                </label>
+            </section>
+
+            <label style="display:flex;align-items:flex-start;gap:0.5rem;">
+                <input type="checkbox" name="termsConsent" value="yes" required>
+                <span>I confirm this recipe is my original work and agree that it may be edited before publishing.</span>
+            </label>
+
+            <button type="submit" class="btn-primary" style="border:none;justify-content:center;">Submit recipe</button>
+            <p class="muted" style="margin:0;">Submissions stay in review until an editor approves them. You’ll be notified via email once it’s live.</p>
+        </form>
+    </section>
+{% endblock %}

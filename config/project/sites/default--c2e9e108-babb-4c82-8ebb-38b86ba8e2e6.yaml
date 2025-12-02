@@ -1,0 +1,8 @@
+baseUrl: $PRIMARY_SITE_URL
+handle: default
+hasUrls: true
+language: en
+name: 'Recipe Book'
+primary: true
+siteGroup: 60ed0367-b2c6-4d4d-a156-213952b23706 # Recipe Book
+sortOrder: 1

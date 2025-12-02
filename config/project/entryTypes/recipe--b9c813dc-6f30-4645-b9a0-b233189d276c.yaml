@@ -1,0 +1,240 @@
+color: null
+description: null
+fieldLayouts:
+  79318d19-3198-4897-a7a0-bf469b30bde1:
+    cardThumbAlignment: end
+    tabs:
+      -
+        elementCondition: null
+        elements:
+          -
+            autocapitalize: true
+            autocomplete: false
+            autocorrect: true
+            class: null
+            dateAdded: '2025-12-01T22:06:46+00:00'
+            disabled: false
+            elementCondition: null
+            id: null
+            includeInCards: false
+            inputType: null
+            instructions: null
+            label: null
+            max: null
+            min: null
+            name: null
+            orientation: null
+            placeholder: null
+            providesThumbs: false
+            readonly: false
+            required: true
+            size: null
+            step: null
+            tip: null
+            title: null
+            type: craft\fieldlayoutelements\entries\EntryTitleField
+            uid: 12e0d7a1-727f-4952-a1b0-1a2f79237609
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:23:51+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: bd4050ed-c4eb-4f84-b48e-1bdd4388712d # Description
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 0bf3b2bd-2489-4886-bed8-9d2066468b9a
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:23:51+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: 961147a0-5068-4af3-8c76-1523d461e279 # Cook Time
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 84ef14e0-30b7-4427-9c90-d7dfa6098e22
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:23:51+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: ffffa147-df16-4e7d-91e7-5f59365adffd # Difficulty
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 1c1de26e-7bcc-4a28-96e1-67837eb21d95
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-05T10:00:00+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: 070fd4f1-0816-460d-8a56-8ad39aae9a86 # Meal Category
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 5d5cd4fb-c0bb-4c0f-af04-e86c3bda62f8
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:23:51+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: 5fc83688-9575-4886-9be7-05368119c24a
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 3152213a-ed31-4569-b29c-ee34a718de64
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-02T04:18:57+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: dcc420d3-b3ff-4a4e-9567-e15852b79a16 # steps
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 8bcba3e6-b323-46f7-8cb0-1ff49feaf34c
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-02T04:18:57+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: 3b72cbae-ce32-4fad-8ad7-37869fbe12e7 # ingredients
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 73d1074c-a901-4f66-bab8-d1d6adc7ae82
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-02T04:13:15+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: ce08b6a8-11b7-4499-936b-ddf1b850e656
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 6abfcbe1-ec74-479b-8a3f-93dfb05a4000
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-02T03:58:28+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: e384bc0d-1341-4153-8362-c0fb0c5847fc
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: a523309c-b228-4070-ad77-724af40742e6
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:23:51+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: ef108738-9ea3-4f64-8582-c27546d99c19
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 7e91ab54-cd76-4090-900c-d32c6ffb65b0
+            userCondition: null
+            warning: null
+            width: 100
+          -
+            dateAdded: '2025-12-01T22:28:35+00:00'
+            editCondition: null
+            elementCondition: null
+            fieldUid: e1963a35-9ce0-4742-b4a0-d2ef406311a7 # Recipe Image
+            handle: null
+            includeInCards: false
+            instructions: null
+            label: null
+            providesThumbs: false
+            required: false
+            tip: null
+            type: craft\fieldlayoutelements\CustomField
+            uid: 6f295809-ae22-4151-acf3-5c219cd02baa
+            userCondition: null
+            warning: null
+            width: 100
+        name: Content
+        uid: a65c9f15-3986-49f1-8dc6-5590efe4890b
+        userCondition: null
+handle: recipe
+hasTitleField: true
+icon: null
+name: Recipe
+showSlugField: true
+showStatusField: true
+slugTranslationKeyFormat: null
+slugTranslationMethod: site
+titleFormat: null
+titleTranslationKeyFormat: null
+titleTranslationMethod: site

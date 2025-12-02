@@ -1,0 +1,80 @@
+columnSuffix: null
+handle: mealCategory
+instructions: 'Select every time of day this recipe works for.'
+name: 'Meal Category'
+searchable: false
+settings:
+  multi: true
+  optgroups: false
+  options:
+    -
+      __assoc__:
+        -
+          - label
+          - Breakfast
+        -
+          - value
+          - breakfast
+        -
+          - icon
+          - ''
+        -
+          - color
+          - '#52e08b'
+        -
+          - default
+          - ''
+    -
+      __assoc__:
+        -
+          - label
+          - Lunch
+        -
+          - value
+          - lunch
+        -
+          - icon
+          - ''
+        -
+          - color
+          - '#ffca5f'
+        -
+          - default
+          - ''
+    -
+      __assoc__:
+        -
+          - label
+          - Snack
+        -
+          - value
+          - snack
+        -
+          - icon
+          - ''
+        -
+          - color
+          - '#ff7196'
+        -
+          - default
+          - ''
+    -
+      __assoc__:
+        -
+          - label
+          - Dinner
+        -
+          - value
+          - dinner
+        -
+          - icon
+          - ''
+        -
+          - color
+          - '#6a84ff'
+        -
+          - default
+          - ''
+translationKeyFormat: null
+translationMethod: none
+type: craft\fields\MultiSelect

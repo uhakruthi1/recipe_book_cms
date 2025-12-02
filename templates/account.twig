@@ -1,0 +1,77 @@
+{% extends "_layout.twig" %}
+
+{% block content %}
+    {% set user = craft.app.user.identity %}
+    {% if not user %}
+        <section class="recipe-single" style="max-width:520px;margin:auto;">
+            <h1>Sign in required</h1>
+            <p class="muted">Log in to view and edit your account details.</p>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+                <a class="btn-primary" href="{{ url('login') }}">Log in</a>
+                {% if craft.app.config.general.allowPublicRegistration ?? false %}
+                    <a class="btn-secondary" href="{{ url('register') }}">Create account</a>
+                {% endif %}
+            </div>
+        </section>
+    {% else %}
+        <section class="recipe-single">
+            <h1>Account</h1>
+            <p class="muted">Update your profile details or log out.</p>
+
+            <div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:center;margin-bottom:2rem;">
+                {% if user.photo %}
+                    <img src="{{ user.photo.getUrl() }}" alt="{{ user.friendlyName ?: user.username }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;">
+                {% endif %}
+                <div>
+                    <p style="margin:0;font-weight:600;">{{ user.friendlyName ?: user.username }}</p>
+                    <p class="muted" style="margin:0.2rem 0 0;">{{ user.email }}</p>
+                </div>
+            </div>
+
+            {% if craft.app.session.hasFlash('error') %}
+                <p style="color:#c00;font-weight:600;">{{ craft.app.session.getFlash('error') }}</p>
+            {% elseif craft.app.session.hasFlash('success') %}
+                <p style="color:#2fbe6c;font-weight:600;">{{ craft.app.session.getFlash('success') }}</p>
+            {% endif %}
+
+            <form method="post" accept-charset="UTF-8" style="display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));">
+                {{ csrfInput() }}
+                {{ actionInput('users/save-user') }}
+                {{ hiddenInput('userId', user.id) }}
+                {{ redirectInput('account') }}
+
+                <label>
+                    <span>Full name</span>
+                    <input type="text" name="fullName" value="{{ user.friendlyName }}" style="width:100%;padding:0.65rem;border-radius:12px;border:1px solid rgba(0,0,0,0.15);">
+                </label>
+
+                <label>
+                    <span>Email</span>
+                    <input type="email" name="email" value="{{ user.email }}" required style="width:100%;padding:0.65rem;border-radius:12px;border:1px solid rgba(0,0,0,0.15);">
+                </label>
+
+                <label>
+                    <span>Username</span>
+                    <input type="text" name="username" value="{{ user.username }}" required style="width:100%;padding:0.65rem;border-radius:12px;border:1px solid rgba(0,0,0,0.15);">
+                </label>
+
+                <label style="grid-column:1/-1;">
+                    <span>Bio (optional)</span>
+                    <textarea name="fields[bio]" rows="4" style="width:100%;padding:0.65rem;border-radius:12px;border:1px solid rgba(0,0,0,0.15);">{{ attribute(user, 'bio') ?? '' }}</textarea>
+                </label>
+
+                <div style="grid-column:1/-1;display:flex;gap:0.75rem;flex-wrap:wrap;">
+                    <button type="submit" class="btn-primary" style="border:none;">Save changes</button>
+                    <a class="btn-secondary" href="{{ url('recipes') }}">Back to recipes</a>
+                </div>
+            </form>
+
+            <form method="post" style="margin-top:1rem;">
+                {{ csrfInput() }}
+                {{ actionInput('users/logout') }}
+                {{ redirectInput('login') }}
+                <button type="submit" class="btn-secondary" style="border:none;cursor:pointer;">Log out</button>
+            </form>
+        </section>
+    {% endif %}
+{% endblock %}

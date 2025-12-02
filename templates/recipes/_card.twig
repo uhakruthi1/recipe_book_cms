@@ -1,0 +1,84 @@
+{% set fieldService = craft.app.fields %}
+{% set servingsField = servingsField ?? fieldService.getFieldByHandle('servings') %}
+{% set caloriesField = caloriesField ?? fieldService.getFieldByHandle('calories') %}
+{% set prepTimeField = fieldService.getFieldByHandle('prepTime') %}
+{% set highlightsField = fieldService.getFieldByHandle('recipeHighlights') %}
+{% set tagsField = fieldService.getFieldByHandle('recipeTags') %}
+
+{% set slugValue = recipe.slug ?? ('sample-' ~ recipe.title|kebab) %}
+{% set urlValue = recipe.url ?? '#' %}
+{% set mealValues = recipe.mealCategory ?? [] %}
+{% if mealValues is iterable == false %}
+    {% set mealValues = mealValues ? [mealValues] : [] %}
+{% endif %}
+{% set mealLabel = mealValues|length ? mealValues|map(v => v|title)|join(', ') : (recipe.mealType is defined ? recipe.mealType : null) %}
+
+<div class="recipe-card" data-recipe-card data-recipe-slug="{{ slugValue }}">
+    <a href="{{ urlValue }}" style="text-decoration:none; color:inherit; display:block;">
+        {% set image = recipe.recipeImage is defined and recipe.recipeImage ? recipe.recipeImage.one() : null %}
+        {% if not image and recipe.imageUrl is defined %}
+            {% set imageUrl = recipe.imageUrl %}
+        {% else %}
+            {% set imageUrl = image ? image.url : null %}
+        {% endif %}
+        {% if imageUrl %}
+            <img src="{{ imageUrl }}" alt="{{ recipe.title }}">
+        {% else %}
+            <div style="width:100%;aspect-ratio:4/3;border-radius:12px;background:rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;color:var(--muted);margin-bottom:0.85rem;">No image yet</div>
+        {% endif %}
+
+        <h3>{{ recipe.title }}</h3>
+        {% if recipe.author ?? null %}
+            <p class="muted" style="margin-top:0;">By {{ recipe.author.friendlyName ?: recipe.author.username }}</p>
+        {% endif %}
+
+        {% if recipe.cookTime or recipe.difficulty or mealLabel %}
+            <p>
+                {% if recipe.cookTime %}
+                    {{ recipe.cookTime }} min
+                {% endif %}
+                {% if recipe.difficulty %}
+                    • {{ recipe.difficulty }}
+                {% endif %}
+                {% if mealLabel %}
+                    • {{ mealLabel }}
+                {% endif %}
+            </p>
+        {% endif %}
+
+        <div class="recipe-card__meta">
+            {% if servingsField and recipe.servings %}
+                <span>Serves {{ recipe.servings }}</span>
+            {% endif %}
+            {% if prepTimeField and recipe.prepTime %}
+                <span>Prep {{ recipe.prepTime }} min</span>
+            {% endif %}
+            {% if caloriesField and recipe.calories %}
+                <span>{{ recipe.calories }} cal</span>
+            {% endif %}
+            {% if recipe.videoUrl %}
+                <span>▶ video</span>
+            {% endif %}
+        </div>
+
+        {% if tagsField and recipe.recipeTags is defined %}
+            {% set tags = recipe.recipeTags.all() %}
+            {% if tags|length %}
+                <div class="recipe-card__tags">
+                    {% for tag in tags|slice(0, 3) %}
+                        <span class="tag-chip">{{ tag.title }}</span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+
+        {% if highlightsField and recipe.recipeHighlights is defined and recipe.recipeHighlights|length %}
+            <div class="recipe-card__badges">
+                {% for highlight in recipe.recipeHighlights|slice(0, 2) %}
+                    <span class="pill-badge">{{ highlight }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </a>
+    <button class="favorite-toggle" type="button" data-favorite-button data-recipe-slug="{{ slugValue }}">Add to favorites</button>
+</div>

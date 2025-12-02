@@ -1,0 +1,262 @@
+{% extends "_layout.twig" %}
+
+{% block content %}
+    {% set fields = craft.app.fields %}
+    {% set allowedDifficulties = {
+        'easy': 'Easy',
+        'medium': 'Medium',
+        'hard': 'Hard'
+    } %}
+    {% set difficultyParam = craft.app.request.getParam('difficulty') %}
+    {% set difficultySegment = craft.app.request.getSegment(2) == 'difficulty' ? craft.app.request.getSegment(3) : null %}
+    {% set difficultyKey = difficultyParam ?: difficultySegment %}
+    {% if difficultyKey %}
+        {% set difficultyKey = difficultyKey|lower %}
+        {% if difficultyKey not in allowedDifficulties|keys %}
+            {% set difficultyKey = null %}
+        {% endif %}
+    {% endif %}
+    {% set difficultyValue = difficultyKey ? allowedDifficulties[difficultyKey] : null %}
+
+    {% set searchQuery = craft.app.request.getParam('q') %}
+    {% set sortOptions = {
+        'newest': 'Newest',
+        'oldest': 'Oldest',
+        'cookTimeAsc': 'Cook time ↑',
+        'cookTimeDesc': 'Cook time ↓'
+    } %}
+    {% set sortParam = craft.app.request.getParam('sort') ?? 'newest' %}
+    {% if sortParam not in sortOptions|keys %}
+        {% set sortParam = 'newest' %}
+    {% endif %}
+    {% set tagGroup = craft.app.tags.getTagGroupByHandle('recipeTags') %}
+    {% set tagParam = craft.app.request.getParam('tag') %}
+    {% set selectedTag = (tagGroup and tagParam) ? craft.tags.group('recipeTags').slug(tagParam).one() : null %}
+    {% set mealOptions = {
+        'breakfast': 'Breakfast',
+        'lunch': 'Lunch',
+        'snack': 'Snack',
+        'dinner': 'Dinner'
+    } %}
+    {% set mealParam = craft.app.request.getParam('meal') %}
+    {% if mealParam and mealParam not in mealOptions|keys %}
+        {% set mealParam = null %}
+    {% endif %}
+
+    {% set sampleRecipes = [
+        {
+            title: 'Sunrise Veggie Omelette',
+            difficulty: 'Easy',
+            cookTime: '15',
+            mealCategory: ['breakfast'],
+            description: 'Fluffy eggs loaded with peppers, spinach, and feta for busy mornings.',
+            url: '#'
+        },
+        {
+            title: 'Citrus Quinoa Power Bowl',
+            difficulty: 'Medium',
+            cookTime: '25',
+            mealCategory: ['lunch'],
+            description: 'Protein-packed quinoa salad with roasted chickpeas and tangy dressing.',
+            url: '#'
+        },
+        {
+            title: 'Spiced Nuts & Seed Clusters',
+            difficulty: 'Easy',
+            cookTime: '10',
+            mealCategory: ['snack'],
+            description: 'Crunchy snack bites coated in maple, cayenne, and flaky salt.',
+            url: '#'
+        },
+        {
+            title: 'Herbed Sheet-Pan Salmon',
+            difficulty: 'Medium',
+            cookTime: '30',
+            mealCategory: ['dinner'],
+            description: 'One-pan salmon with potatoes, asparagus, and lemon herb butter.',
+            url: '#'
+        },
+    ] %}
+
+    <section class="page-section">
+        <h1>All Recipes</h1>
+        <p style="color:var(--muted); margin-top:-0.5rem;">Use advanced filters to zero in on your next dish.</p>
+
+        <form class="recipe-search" method="get">
+            <input type="search" name="q" placeholder="Search by ingredient, title, or tag..." value="{{ searchQuery }}">
+            {% if selectedTag %}
+                <input type="hidden" name="tag" value="{{ selectedTag.slug }}">
+            {% endif %}
+            {% if difficultyKey %}
+                <input type="hidden" name="difficulty" value="{{ difficultyKey }}">
+            {% endif %}
+            <button type="submit">Search</button>
+        </form>
+
+        <div class="favorites-cta">
+            <button class="favorite-filter-btn" type="button" id="favoritesOnlyToggle">Show favorites only</button>
+            <span class="muted">Favorites save locally. {% if craft.app.user.isGuest %}<a href="{{ url('register') }}">Create an account</a> to sync soon.{% else %}They're linked to your account.{% endif %}</span>
+        </div>
+
+        <div id="filters" class="filter-controls">
+            <a href="{{ url('recipes') }}" class="{{ difficultyKey ? '' : 'is-active' }}">All</a>
+            {% for key, label in allowedDifficulties %}
+                <a href="{{ url('recipes/difficulty/' ~ key) }}" class="{{ difficultyKey == key ? 'is-active' : '' }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+
+        <div class="filter-controls" style="margin-top:1rem;">
+            <a href="{{ url('recipes') }}" class="{{ mealParam ? '' : 'is-active' }}">Any Meal</a>
+            {% for key, label in mealOptions %}
+                {% set params = {
+                    q: searchQuery,
+                    difficulty: difficultyKey,
+                    tag: selectedTag ? selectedTag.slug,
+                    meal: key
+                }|filter(v => v is not empty) %}
+                <a href="{{ url('recipes', params) }}" class="{{ mealParam == key ? 'is-active' : '' }}">{{ label }}</a>
+            {% endfor %}
+        </div>
+
+    {% if tagGroup %}
+        {% set popularTags = craft.tags.group('recipeTags').orderBy('title asc').limit(8).all() %}
+            {% if popularTags|length %}
+                <div class="tags-cloud" style="margin-bottom:1.5rem;">
+                    {% for tag in popularTags %}
+                        {% set tagLinkParams = { tag: tag.slug } %}
+                        {% if searchQuery %}
+                            {% set tagLinkParams = tagLinkParams|merge({ q: searchQuery }) %}
+                        {% endif %}
+                        <a href="{{ url('recipes', tagLinkParams) }}">{{ tag.title }}</a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    {% set query = craft.entries.section('recipes') %}
+
+    {% if difficultyValue %}
+        {% set query = query.difficulty(difficultyValue) %}
+    {% endif %}
+    {% if selectedTag %}
+        {% set query = query.relatedTo(selectedTag) %}
+    {% endif %}
+    {% if searchQuery %}
+        {% set query = query.search(searchQuery) %}
+    {% endif %}
+    {% if mealParam %}
+        {% set query = query.mealCategory([mealParam]) %}
+    {% endif %}
+
+    {% set cookTimeFieldUid = '961147a0-5068-4af3-8c76-1523d461e279' %}
+    {% set cookTimeSortExpr = "JSON_EXTRACT([[elements_sites.content]], '$.\\\"" ~ cookTimeFieldUid ~ "\\\"') + 0" %}
+    {% switch sortParam %}
+        {% case 'oldest' %}
+            {% set query = query.orderBy('postDate asc') %}
+        {% case 'cookTimeAsc' %}
+            {% set query = query.orderBy(cookTimeSortExpr ~ ' asc') %}
+        {% case 'cookTimeDesc' %}
+            {% set query = query.orderBy(cookTimeSortExpr ~ ' desc') %}
+        {% default %}
+            {% set query = query.orderBy('postDate desc') %}
+    {% endswitch %}
+
+    {% paginate query.limit(6) as pageInfo, recipes %}
+    {% set resultCount = pageInfo.total %}
+    {% if resultCount == 0 %}
+        {% set recipes = sampleRecipes %}
+    {% endif %}
+
+    <section class="page-section">
+    <div class="recipe-stats">
+        <article class="recipe-stat-card">
+            <span>Matching Recipes</span>
+            <strong>{{ resultCount }}</strong>
+        </article>
+        {% if difficultyValue %}
+            <article class="recipe-stat-card">
+                <span>Difficulty</span>
+                <strong>{{ difficultyValue }}</strong>
+            </article>
+        {% endif %}
+        {% if selectedTag %}
+            <article class="recipe-stat-card">
+                <span>Tag</span>
+                <strong>{{ selectedTag.title }}</strong>
+            </article>
+        {% endif %}
+        {% if mealParam %}
+            <article class="recipe-stat-card">
+                <span>Meal</span>
+                <strong>{{ mealOptions[mealParam] }}</strong>
+            </article>
+        {% endif %}
+        {% if searchQuery %}
+            <article class="recipe-stat-card">
+                <span>Keyword</span>
+                <strong>"{{ searchQuery }}"</strong>
+            </article>
+        {% endif %}
+    </div>
+
+    {% if difficultyValue or selectedTag or searchQuery or mealParam %}
+        <div class="active-filters">
+            <strong>Active:</strong>
+            {% if difficultyValue %}
+                <span class="filter-badge">Difficulty: {{ difficultyValue }}</span>
+            {% endif %}
+            {% if selectedTag %}
+                <span class="filter-badge">Tag: {{ selectedTag.title }}</span>
+            {% endif %}
+            {% if searchQuery %}
+                <span class="filter-badge">Keyword: {{ searchQuery }}</span>
+            {% endif %}
+            {% if mealParam %}
+                <span class="filter-badge">Meal: {{ mealOptions[mealParam] }}</span>
+            {% endif %}
+            <a class="clear-link" href="{{ url('recipes') }}">Clear filters</a>
+        </div>
+    {% endif %}
+
+    <form class="sort-controls" method="get">
+        {% if searchQuery %}<input type="hidden" name="q" value="{{ searchQuery }}">{% endif %}
+        {% if selectedTag %}<input type="hidden" name="tag" value="{{ selectedTag.slug }}">{% endif %}
+        {% if difficultyKey %}<input type="hidden" name="difficulty" value="{{ difficultyKey }}">{% endif %}
+        {% if mealParam %}<input type="hidden" name="meal" value="{{ mealParam }}">{% endif %}
+        <label for="sort" style="font-weight:600;">Sort by</label>
+        <select name="sort" id="sort" onchange="this.form.submit()">
+            {% for key, label in sortOptions %}
+                <option value="{{ key }}" {{ sortParam == key ? 'selected' }}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+        <noscript><button type="submit">Go</button></noscript>
+    </form>
+
+    <div class="recipes-grid">
+        {% for recipe in recipes %}
+            {% include "recipes/_card" with { recipe: recipe } %}
+        {% else %}
+            <p>No recipes found.</p>
+        {% endfor %}
+    </div>
+    <p id="favoritesEmpty" class="muted" hidden>No favorites yet. Tap “Add to favorites” on any recipe.</p>
+    {% if pageInfo is defined and pageInfo.totalPages > 1 %}
+        <nav class="pagination" aria-label="Pagination">
+            {% if pageInfo.prevUrl %}
+                <a href="{{ pageInfo.prevUrl }}" rel="prev">Previous</a>
+            {% else %}
+                <span>Previous</span>
+            {% endif %}
+            <span class="is-active">{{ pageInfo.currentPage }} / {{ pageInfo.totalPages }}</span>
+            {% if pageInfo.nextUrl %}
+                <a href="{{ pageInfo.nextUrl }}" rel="next">Next</a>
+            {% else %}
+                <span>Next</span>
+            {% endif %}
+        </nav>
+    {% endif %}
+    </section>
+{% endblock %}
